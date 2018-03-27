@@ -1,6 +1,6 @@
 # DSJobs
 
-"Learn what recruiters have in mind, if they seek for Data Scientists."
+"Learn what recruiters have in mind if they seek for Data Scientists."
 
 The purpose of this project is to build a DS workflow: get data > clean data > analyze > report > learn
 
