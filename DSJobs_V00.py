@@ -167,5 +167,9 @@ def JobAnalysis(id_):
         job_ = TextBlob(str(db.readJobDetail(str(id_))))
         print(job_.sentiment)
     
-UpdateKarriereAt()
-#JobAnalysis('4598867')
+def main():
+    UpdateKarriereAt()
+    #JobAnalysis('4598867')
+    
+if __name__ == "__main__":
+    main()
