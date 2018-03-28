@@ -2,7 +2,7 @@
 
 "Learn what recruiters have in mind if they seek for Data Scientists."
 
-The purpose of this project is to build a DS workflow: get data > clean data > analyze > report > learn
+The purpose of this project is to get hands dirty and build a DS demo workflow: get data > clean data > analyze > report > learn > repeat
 
 This tool searches recruiting services and collects information about DS jobs.
 Machine learning will cluster those jobs and analyze what skills are requested by recruiters and how these requirements evolve over time.
