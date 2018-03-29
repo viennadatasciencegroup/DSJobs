@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+'''
 o BeautifulSoup: https://www.analyticsvidhya.com/blog/2015/10/beginner-guide-web-scraping-beautiful-soup-python/
 
 Open SQL DB
@@ -11,16 +11,16 @@ Use Decision tree model to analyze Jobs
 2DO
 o Schedule day run
 o Use IP Switcher Stem: https://dm295.blogspot.co.at/2016/02/tor-ip-changing-and-web-scraping.html?m=1
-o NLP Textblob: http://textblob.readthedocs.io/en/dev/quickstart.html
+o NLP Textblob: http://textblob.readthedocs.io/en/dev/quickstart.html | https://www.analyticsvidhya.com/blog/2018/02/natural-language-processing-for-beginners-using-textblob/
 
-"""
+'''
 
 import requests
 import re
 from bs4 import BeautifulSoup
 import pymysql
 from time import gmtime, strftime
-from textblob import TextBlob
+#from collections import Counter
 
 class Job(object):
     
@@ -42,9 +42,10 @@ class Job(object):
         self.cur.execute("INSERT INTO JobListings (JobSource, QueryDate, SearchKey, JobSourceID, JobUrl, JobName, JobListingDate, Company) VALUES ('"+src_+"','"+qDate_+"','"+job+"',"+id_+",'"+url_+"','"+job_+"','"+when_+"','"+company_+"');")#'"+short_+"'
         self.conn.commit()
         
-    def writeJobDetail(self, src_,id_, jobDetail_):
+    def writeJobDetail(self, src_,id_, jobDetail_, jobDetailClean_):
         #ALTER TABLE JobListings CONVERT TO CHARACTER SET utf8
         jobDetail_ = jobDetail_.replace("'", "")
+        
         self.cur.execute("INSERT IGNORE INTO JobDetail (JobSource, JobSourceID, JobDetail) VALUES ('"+src_+"',"+id_+",'"+jobDetail_+"');")#'"+short_+"'
         self.conn.commit()
         
@@ -53,6 +54,10 @@ class Job(object):
         return(self.cur.fetchall())
         
 def GetWebPage(url):
+    '''
+    Query the html page and return a beautiful soup object.
+    '''
+    
     #query the website
     page = requests.get(url)
 
@@ -61,6 +66,9 @@ def GetWebPage(url):
     return soup
 
 def GetKarriereAtJobDetail(url_):
+    '''
+    follow the link to the detailed job description and return the information.
+    '''
     
     page = requests.get(url_)
     
@@ -71,6 +79,14 @@ def GetKarriereAtJobDetail(url_):
     return x0_[x1_+21:x1_+x2_+20]
 
 def GetKarriereAtJob(job,src):
+    '''
+    use keyphrases to generate a URL. Walk though the list of jobs and return their 
+    url, description, id and detailed job desciption.
+    If the last job on the page was found, use the same keyword, but increase the
+    pagecount by 1. if the first job on the new page is different from the first job
+    of the last page, get all jobs from the page. Otherwise break the loop.
+    '''
+    
     searchString_ = 'https://www.karriere.at/jobs?keywords='
     
     a=1
@@ -131,17 +147,18 @@ def GetKarriereAtJob(job,src):
         while a < len(id_):
             #print('Save Job: '+str(a)+' ID: '+id_[a])
             db.writeJob(src_[a], job, id_[a], url_[a],job_[a],when_[a],company_[a])
-            db.writeJobDetail(src_[a],id_[a],jobDetail_[a])
+            db.writeJobDetail(src_[a],id_[a],jobDetail_[a],'')#, JobDetailClean(jobDetail_[a]))
             a += 1
             
     print(str(a) + ' Jobs updated sucessfully')
     
 def UpdateKarriereAt():
+    '''
+    Select keyphrases to put into the searchengine "www.karriere.at" 
+    '''
+    
     print("Start UpdateKarriereAt")
-    
-    #Define the search string for karriere.at
-    #https://www.analyticsvidhya.com/glossary-of-common-statistics-and-machine-learning-terms/
-    
+      
     GetKarriereAtJob('data+science','www.karriere.at')
     GetKarriereAtJob('data+scientist','www.karriere.at')
     GetKarriereAtJob('big+data','www.karriere.at')
@@ -160,16 +177,13 @@ def UpdateKarriereAt():
     GetKarriereAtJob('deep+learning','www.karriere.at')
     
     print("End UpdateKarriereAt")
-    
-def JobAnalysis(id_):
-    #http://textblob.readthedocs.io/en/dev/quickstart.html
-    with Job() as db:
-        job_ = TextBlob(str(db.readJobDetail(str(id_))))
-        print(job_.sentiment)
-    
+
 def main():
+    '''
+    update the database
+    '''
+    
     UpdateKarriereAt()
-    #JobAnalysis('4598867')
     
 if __name__ == "__main__":
     main()
