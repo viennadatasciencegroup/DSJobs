@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 '''
 o BeautifulSoup: https://www.analyticsvidhya.com/blog/2015/10/beginner-guide-web-scraping-beautiful-soup-python/
@@ -18,40 +19,12 @@ o NLP Textblob: http://textblob.readthedocs.io/en/dev/quickstart.html | https://
 import requests
 import re
 from bs4 import BeautifulSoup
-import pymysql
-from time import gmtime, strftime
-#from collections import Counter
-
-class Job(object):
-    
-    def __init__(self):
-        self.conn = pymysql.connect(host="172.17.0.2", user="root", passwd="root", db="DSJobs", use_unicode=True, charset="utf8") 
-        self.cur = self.conn.cursor()
-        
-    def __enter__(self):
-        return self
-        
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.conn:
-            self.conn.close()
-            
-    def writeJob(self, src_, job, id_, url_,job_,when_,company_):
-        #ALTER TABLE JobListings CONVERT TO CHARACTER SET utf8
-        qDate_ = strftime("%Y/%m/%d", gmtime())
-        job_ = job_.replace("'", "")
-        self.cur.execute("INSERT INTO JobListings (JobSource, QueryDate, SearchKey, JobSourceID, JobUrl, JobName, JobListingDate, Company) VALUES ('"+src_+"','"+qDate_+"','"+job+"',"+id_+",'"+url_+"','"+job_+"','"+when_+"','"+company_+"');")#'"+short_+"'
-        self.conn.commit()
-        
-    def writeJobDetail(self, src_,id_, jobDetail_, jobDetailClean_):
-        #ALTER TABLE JobListings CONVERT TO CHARACTER SET utf8
-        jobDetail_ = jobDetail_.replace("'", "")
-        
-        self.cur.execute("INSERT IGNORE INTO JobDetail (JobSource, JobSourceID, JobDetail) VALUES ('"+src_+"',"+id_+",'"+jobDetail_+"');")#'"+short_+"'
-        self.conn.commit()
-        
-    def readJobDetail(self,id_):
-        self.cur.execute("SELECT JobDetail FROM JobDetail WHERE JobSourceID = " + str(id_))
-        return(self.cur.fetchall())
+from DSJobsDB import Job
+import time
+import datetime
+import warnings
+#import cgi
+#import cgitb; cgitb.enable()  # for troubleshooting
         
 def GetWebPage(url):
     '''
@@ -62,7 +35,7 @@ def GetWebPage(url):
     page = requests.get(url)
 
     #create nice html file
-    soup=BeautifulSoup(page.content,"lxml")
+    soup=BeautifulSoup(page.content)#,"lxml")
     return soup
 
 def GetKarriereAtJobDetail(url_):
@@ -88,9 +61,13 @@ def GetKarriereAtJob(job,src):
     '''
     
     searchString_ = 'https://www.karriere.at/jobs?keywords='
+        
+    PrintToHtml('Attempt to read: ' + searchString_ + job)
     
     a=1
     webData = GetWebPage(searchString_ + job + '&page=' + str(a))
+        
+    #PrintToHtml(str(webData))
     
     src_=[]
     url_=[]
@@ -106,7 +83,7 @@ def GetKarriereAtJob(job,src):
     
     while (jobExit_ == 0):
         
-        print('Parse job: '+str(job) +', page: '+str(a))
+        PrintToHtml('Read jobs: '+str(job) +', page: '+str(a))
         
         jobFirst_ = 0
         
@@ -138,10 +115,13 @@ def GetKarriereAtJob(job,src):
         
         if a > 25:
             jobExit_ = 1
+            PrintToHtml('Search String '+searchString_ + job + '&page=' + str(a)+' provides no result')
         
         webData = GetWebPage(searchString_ + job + '&page=' + str(a))
     
     #Write all elemts of the List items to the database
+    #with Job() as db:
+    #db = Job()
     with Job() as db:
         a = 0
         while a < len(id_):
@@ -150,14 +130,24 @@ def GetKarriereAtJob(job,src):
             db.writeJobDetail(src_[a],id_[a],jobDetail_[a],'')#, JobDetailClean(jobDetail_[a]))
             a += 1
             
-    print(str(a) + ' Jobs updated sucessfully')
+    PrintToHtml(str(a) + ' Jobs updated sucessfully')
+    
+def PrintToHtml(message):
+
+    st = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+
+    with open('debug.html', 'a') as myfile:
+        myfile.write('<p>' +str(st) + " | " + message + '</p>')
+
+
+    #myfile.close()
     
 def UpdateKarriereAt():
     '''
     Select keyphrases to put into the searchengine "www.karriere.at" 
     '''
     
-    print("Start UpdateKarriereAt")
+    PrintToHtml("Start UpdateKarriereAt")
       
     GetKarriereAtJob('data+science','www.karriere.at')
     GetKarriereAtJob('data+scientist','www.karriere.at')
@@ -176,13 +166,23 @@ def UpdateKarriereAt():
     GetKarriereAtJob('decision+tree','www.karriere.at')
     GetKarriereAtJob('deep+learning','www.karriere.at')
     
-    print("End UpdateKarriereAt")
+    PrintToHtml("End UpdateKarriereAt")
+    
+    #5089767
 
 def main():
     '''
     update the database
     '''
+    warnings.simplefilter("ignore", DeprecationWarning)
     
+    with open('debug.html','w') as myfile:
+        myfile.write("""<html>
+        <head></head>
+        <body><p></p>{htmlText}</body>
+        </html>""")
+        
+    #print('Hello World')
     UpdateKarriereAt()
     
 if __name__ == "__main__":
