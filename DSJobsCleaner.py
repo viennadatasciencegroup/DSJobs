@@ -8,10 +8,63 @@ Created on Thu Apr  5 03:29:05 2018
 from DSJobsDB import Job
 import time
 import datetime
+from bs4 import BeautifulSoup
+#from bs4 import UnicodeDammit
 
 from textblob import TextBlob
+import re
 
-import json
+def JobDetailClean2(text_):
+    soup=BeautifulSoup(text_).get_text()
+    text_ = soup
+    #text_ = text_.replace('\\/','/')
+    text_ = text_.replace('<\\/strong>','')
+    text_ = text_.replace('<\\/p>','.')
+    text_ = text_.replace('<\\/li>','.')
+    text_ = text_.replace('<\\/ul>','.')
+    text_ = text_.replace('<\\/h1>','.')
+    text_ = text_.replace('<\\/h2>','.')
+    text_ = text_.replace('<\\/h3>','.')
+    text_ = text_.replace('<\\/h4>','.')
+    text_ = text_.replace('<\\/h5>','.')
+    text_ = text_.replace('\\n','.')
+    text_ = text_.replace('\\/','/')
+    
+    text_ = text_.replace('bzw.','bzw')
+    text_ = text_.replace('Mag.','Mag')
+    text_ = text_.replace('Nr.','Nr')
+    text_ = text_.replace('z.B.','zB')
+    text_ = text_.replace('z.H.','zH')
+    
+    text_ = text_.replace('xc3xa4','ä')
+    text_ = text_.replace('xc3x84','Ä')
+    text_ = text_.replace('xc3xbc','ü')
+    text_ = text_.replace('xc3x9c','Ü')
+    text_ = text_.replace('xc3xb6','ö')
+    text_ = text_.replace('xc3x96','Ö')
+    text_ = text_.replace('xc3x9f','ß')
+    
+    text_ = text_.replace('"@type":','')
+    text_ = text_.replace('"@context":','')
+    text_ = text_.replace('"','')
+    text_ = text_.replace('{','')
+    text_ = text_.replace('}','')
+    text_ = text_.replace('[','')
+    text_ = text_.replace(']','')
+
+    text_ = re.sub( '\.+', '. ', text_ ).strip()
+    text_ = text_.replace(' . ','. ')
+    text_ = text_.replace(',',', ')
+    text_ = text_.replace(':',': ')
+    text_ = re.sub( '\s+', ' ', text_ ).strip()
+    
+    text_ = TextBlob(text_)
+        
+    if len(text_) > 3:
+        if (text_.detect_language() == 'de'):
+            text_ = text_.translate(to="en")
+        
+    return(str(text_))
 
 def JobDetailClean(text_):
     '''
@@ -92,7 +145,7 @@ def CleanAllJobs():
         max_ = db.getNoJobs()
         while (a < int(max_[0][0])):
             #print(db.readJobDetail(a)[0][1])
-            jobClean_ = JobDetailClean(db.readJobDetail(a)[0][1])
+            jobClean_ = JobDetailClean2(db.readJobDetail(a)[0][1])
             id_ = int(db.readJobDetail(a)[0][0])
             #print(id_,jobClean_)
             db.writeJobDetailClean(id_, jobClean_)
