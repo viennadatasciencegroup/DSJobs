@@ -25,14 +25,40 @@ import datetime
 import warnings
 #import cgi
 #import cgitb; cgitb.enable()  # for troubleshooting
-        
+from stem import Signal
+from stem.control import Controller
+
+def get_tor_session()
+    '''
+    This function changes the IP address of your search request. It uses the TOR network.
+    Please start the TOR service "service tor start" on your server to make this work.
+    Find the setup instructions here:
+    https://stackoverflow.com/questions/30286293/make-requests-using-python-over-tor
+    '''
+    renew_connection()
+
+    session = requests.session()
+    session.proxies = {'http': 'socks5://127.0.0.1:9050',
+                       'https': 'socks5://127.0.0.1:9050'}
+
+#   print(session.get("http://httpbin.org/ip").text)
+
+    return session
+
+def renew_connection():
+    with Controller.from_port(port = 9051) as controller:
+        controller.authenticate(password='my password')
+        controller.signal(Signal.NEWNYM)
+
 def GetWebPage(url):
     '''
     Query the html page and return a beautiful soup object.
     '''
     
     #query the website
-    page = requests.get(url)
+    #page = requests.get(url)
+    session = get_tor_session()
+    page = session.get(url)
 
     #create nice html file
     soup=BeautifulSoup(page.content)#,"lxml")
