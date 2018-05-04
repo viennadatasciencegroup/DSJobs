@@ -85,7 +85,7 @@ def main():
     '''
     warnings.simplefilter("ignore", DeprecationWarning)
     
-    WriteKeywords()
+    #WriteKeywords()
     
     KeywordsInJob()
     

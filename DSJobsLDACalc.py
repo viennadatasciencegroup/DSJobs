@@ -42,11 +42,44 @@ import pyLDAvis #conda install -c mlgill pyldavis
 from pyLDAvis import gensim_# as ldavis
 #import cPickle as pickle
 import pickle
+import csv
 
 #import os
 import codecs
 
 nlp = spacy.load('en')
+
+def getTopics(jobs_):
+  
+    bigram_model = Phrases.load('data/bigram_model_all')
+    trigram_model = Phrases.load('data/trigram_model_all')
+    trigram_dictionary = Dictionary.load('data/trigram_dict_all.dict')
+    lda = LdaMulticore.load('data/lda_model_all')
+
+    topic_names = {0:u'Risk Management Bank', 
+                   1:u'Big Data Report', 
+                   2:u'Automotive SAP', 
+                   3:u'Microsoft Java Scrum', 
+                   4:u'Medical Consultant', 
+                   5:u'Java Engineer', 
+                   6:u'Computer Vision Developer', 
+                   7:u'Data Analyst', 
+                   8:u'BI SAP BW', 
+                   9:u'IOT Reporting R', 
+                   10:u'Global Project Presentation',
+                   11:u'Cloud Engineer IOT', 
+                   12:u'Industry 4.0', 
+                   13:u'Risk Consulting', 
+                   14:u'Machine Learning Data Science'}
+    
+    topics_ = []
+    
+    for job_ in jobs_:
+      if job_ is not None:
+        #print(job_[0])
+        topics_.append(lda_description(bigram_model, trigram_model, trigram_dictionary, lda, topic_names, job_[1], job_[0]))
+        
+    #print(topics_)
     
 def PrintToHtml(message):
 
@@ -113,7 +146,7 @@ def get_sample_review(review_number):
     
     return list(it.islice(line_review('data/review_text_all.txt'), review_number, review_number+1))[0]
 
-def lda_description(bigram_model, trigram_model, trigram_dictionary, lda, topic_names, review_text, min_topic_freq=0.05):
+def lda_description(bigram_model, trigram_model, trigram_dictionary, lda, topic_names, review_text, number, min_topic_freq=0.05):
     """
     accept the original text of a review and (1) parse it with spaCy,
     (2) apply text pre-proccessing steps, (3) create a bag-of-words
@@ -132,9 +165,23 @@ def lda_description(bigram_model, trigram_model, trigram_dictionary, lda, topic_
     bigram_review = bigram_model[unigram_review]
     trigram_review = trigram_model[bigram_review]
     
+    '''
+    Varaint B: Use Dictionary
+    '''
+    with open('data/Dictionary.csv', 'r', newline='') as csvfile:
+      
+      file_ = csv.reader(csvfile, delimiter=',', quotechar='"')
+      
+      dictionary_ = []
+
+      for row in file_:
+          dictionary_.append(row[0])
+    
     # remove any remaining stopwords
     trigram_review = [term for term in trigram_review
-                      if not term in STOP_WORDS]#spacy.en.STOPWORDS] # Echeck
+    #                  if not term in STOP_WORDS]#spacy.en.STOPWORDS] # Echeck
+                      if term in dictionary_]#spacy.en.STOPWORDS]
+    
     
     # create a bag-of-words representation
     review_bow = trigram_dictionary.doc2bow(trigram_review)
@@ -150,7 +197,10 @@ def lda_description(bigram_model, trigram_model, trigram_dictionary, lda, topic_
             break
             
         # print the most highly related topic names and frequencies
-        print('{:25} {}'.format(topic_names[topic_number], round(freq, 3)))
+        print(number, topic_number, topic_names[topic_number], round(freq, 3))
+        
+        with Job() as db:
+            db.writeTopic(number, topic_number, topic_names[topic_number], round(freq, 3))
 
 def LDA_Analysis():
     #http://nbviewer.jupyter.org/github/skipgram/modern-nlp-in-python/blob/master/executable/Modern_NLP_in_Python.ipynb
@@ -381,7 +431,7 @@ def LDA_Analysis():
     # load the finished LDA model from disk
     lda = LdaMulticore.load('data/lda_model_all')
 
-    explore_topic(lda, topic_number=1)
+    #explore_topic(lda, topic_number=1)
 
     topic_names = {0:u'Risk Management Bank', 
                    1:u'Big Data Report', 
@@ -395,7 +445,7 @@ def LDA_Analysis():
                    9:u'IOT Reporting R', 
                    10:u'Global Project Presentation',
                    11:u'Cloud Engineer IOT', 
-                   12:u'Industry 4.0, 
+                   12:u'Industry 4.0', 
                    13:u'Risk Consulting', 
                    14:u'Machine Learning Data Science'}
     
@@ -403,10 +453,11 @@ def LDA_Analysis():
     
     with open('data/topic_names.pkl', 'wb') as f:
         pickle.dump(topic_names, f)
-        
-    sample_review = get_sample_review(10)
     
-    lda_description(bigram_model, trigram_model, trigram_dictionary, lda, topic_names, sample_review)
+    #load sameple_review from database
+    #sample_review = get_sample_review(10)
+    
+    #lda_description(bigram_model, trigram_model, trigram_dictionary, lda, topic_names, sample_review)
 
     #LDAvis_data_filepath = os.path.join(intermediate_directory, 'ldavis_prepared')
     
@@ -419,13 +470,16 @@ def LDA_Analysis():
         with open('data/ldavis_prepared', 'wb') as f:
             pickle.dump(LDAvis_prepared, f)
             
-    # load the pre-prepared pyLDAvis data from disk
-    #with open('data/ldavis_prepared', 'rb') as f:
-    #    LDAvis_prepared = pickle.load(f)
-        
-    #pyLDAvis.show(LDAvis_prepared)
+    '''
+    export LDA file
+    '''
     
-    #pyLDAvis.display(pyLDAvis.gensim_.prepare(lda, trigram_bow_corpus, trigram_dictionary))    
+    # load the pre-prepared pyLDAvis data from disk
+    with open('data/ldavis_prepared', 'rb') as f:
+        LDAvis_prepared = pickle.load(f)
+
+    with open('data/DSJobs_LDA.html', 'w') as f:
+        pyLDAvis.save_html(LDAvis_prepared, f)            
 
 def main():
     '''

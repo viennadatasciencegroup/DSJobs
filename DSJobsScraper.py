@@ -28,20 +28,17 @@ import warnings
 from stem import Signal
 from stem.control import Controller
 
-def get_tor_session()
-    '''
-    This function changes the IP address of your search request. It uses the TOR network.
-    Please start the TOR service "service tor start" on your server to make this work.
-    Find the setup instructions here:
-    https://stackoverflow.com/questions/30286293/make-requests-using-python-over-tor
-    '''
+#https://stackoverflow.com/questions/30286293/make-requests-using-python-over-tor
+
+def get_tor_session():
+
     renew_connection()
 
     session = requests.session()
     session.proxies = {'http': 'socks5://127.0.0.1:9050',
                        'https': 'socks5://127.0.0.1:9050'}
 
-#   print(session.get("http://httpbin.org/ip").text)
+#    print(session.get("http://httpbin.org/ip").text)
 
     return session
 
@@ -49,7 +46,7 @@ def renew_connection():
     with Controller.from_port(port = 9051) as controller:
         controller.authenticate(password='my password')
         controller.signal(Signal.NEWNYM)
-
+        
 def GetWebPage(url):
     '''
     Query the html page and return a beautiful soup object.
@@ -57,11 +54,12 @@ def GetWebPage(url):
     
     #query the website
     #page = requests.get(url)
+
     session = get_tor_session()
     page = session.get(url)
 
     #create nice html file
-    soup=BeautifulSoup(page.content)#,"lxml")
+    soup=BeautifulSoup(page.content)#, "html5lib")#,"lxml")
     return soup
 
 def GetKarriereAtJobDetail(url_):
@@ -69,7 +67,9 @@ def GetKarriereAtJobDetail(url_):
     follow the link to the detailed job description and return the information.
     '''
     
-    page = requests.get(url_)
+    #page = requests.get(url_)
+    session = get_tor_session()
+    page = session.get(url_)
     
     x0_ = str(page.content)
     x1_ =  x0_.find("application/ld+json")
@@ -107,6 +107,9 @@ def GetKarriereAtJob(job,src):
     jobFirstID_ = ''
     jobExit_ = 0
     
+    requestLimit_ = 50
+    countRequest_ = 0
+    
     while (jobExit_ == 0):
         
         PrintToHtml('Read jobs: '+str(job) +', page: '+str(a))
@@ -121,6 +124,12 @@ def GetKarriereAtJob(job,src):
             
             #Get the Job Details from new URSL
             jobDetail_.append(GetKarriereAtJobDetail(div.find('a')['href']))
+            
+            countRequest_ += 1
+            
+            if (countRequest_ >= requestLimit_):
+              SwitchIp()
+              countRequest_ = 0
             
             if (jobFirst_ == 0):
                 JobAgain_ = str(div.find('a')['href'][-7:])
@@ -167,6 +176,14 @@ def PrintToHtml(message):
 
 
     #myfile.close()
+    
+def SwitchIp():
+    '''
+    echo "ControlPort 9051" >> /etc/tor/torrc
+    '''
+    with Controller.from_port(port=9051) as controller:
+      controller.authenticate()
+      controller.signal(Signal.NEWNYM)
     
 def UpdateKarriereAt():
     '''

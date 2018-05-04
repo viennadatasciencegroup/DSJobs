@@ -10,12 +10,15 @@ import pymysql
 from time import gmtime, strftime
 import time
 import datetime
+import databaseconfig as cfg
 #from collections import Counter
 
 class Job(object):
     
     def __init__(self):
-        self.conn = pymysql.connect(host="172.17.0.2", user="root", passwd="root", db="DSJobs", use_unicode=True, charset="utf8")
+        #self.conn = pymysql.connect(host="172.17.0.2", user="root", passwd="root", db="DSJobs", use_unicode=True, charset="utf8")
+        #self.conn = pymysql.connect(host='mysql57a.ssl-net.net', user='h10u679', passwd='DSJobsDB123!@!', db='h10u679_dsjobs', use_unicode=True, charset='utf8')
+        self.conn = pymysql.connect(host=cfg.mysql['host'], user=cfg.mysql['user'], passwd=cfg.mysql['passwd'], db=cfg.mysql['db'], use_unicode=True, charset='utf8') 
         
         self.cur = self.conn.cursor()
         
@@ -44,6 +47,10 @@ class Job(object):
         
     def readJobDetail(self,index_):
         self.cur.execute("SELECT JobSourceID, JobDetail FROM JobDetail ORDER BY JobSourceID LIMIT " + str(index_) + ", 1;")
+        return(self.cur.fetchall())
+        
+    def readJobDetailAll(self):
+        self.cur.execute("SELECT JobSourceID, JobDetailClean FROM JobDetail ORDER BY JobSourceID;")
         return(self.cur.fetchall())
         
     def writeJobDetailClean(self, id_, jobDetailClean_):
@@ -84,6 +91,22 @@ class Job(object):
         self.conn.commit()
         
         self.PrintToHtml('Save KeyWord to DB: '+str(keyWord_))
+        
+    def writeTopic(self,JobSourceID_, No_, Topic_, Weight_):
+        #ALTER TABLE JobListings CONVERT TO CHARACTER SET utf8
+        #keyWord_ = keyWord_.replace("'", "")
+        
+        self.cur.execute("INSERT INTO JobTopic (JobSourceID, TopicID, TopicName, Weight) VALUES ("+str(JobSourceID_)+","+str(No_)+",'"+Topic_+"',"+str(Weight_)+");")
+        self.conn.commit()
+        
+    def readJobTopic(self):
+        self.cur.execute("SELECT * FROM ReportTopicsDate;")
+        return(self.cur.fetchall())
+        
+    def getTopic(self):
+        #self.cur.execute("select distinct Topic from ReportTopicsDate ORDER BY Weight desc;")
+        self.cur.execute("select distinct Topic, TopicID from ReportTopicsDate ORDER BY Weight desc;")
+        return(self.cur.fetchall()) 
         
     def getKeyWord(self):
         self.cur.execute("SELECT Word FROM KeyWords WHERE NOT KeyWord IS NULL ORDER BY Count desc;")
