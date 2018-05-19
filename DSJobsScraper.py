@@ -27,6 +27,16 @@ import warnings
 #import cgitb; cgitb.enable()  # for troubleshooting
 from stem import Signal
 from stem.control import Controller
+import json
+
+keywords = []
+
+
+def load_keywords():
+    global keywords
+    with open('data/search_keywords.json', 'r') as json_file:
+        keywords = json.load(json_file)
+
 
 #https://stackoverflow.com/questions/30286293/make-requests-using-python-over-tor
 
@@ -77,7 +87,7 @@ def GetKarriereAtJobDetail(url_):
     
     return x0_[x1_+21:x1_+x2_+20]
 
-def GetKarriereAtJob(job,src):
+def GetKarriereAtJob(job):
     '''
     use keyphrases to generate a URL. Walk though the list of jobs and return their 
     url, description, id and detailed job desciption.
@@ -89,6 +99,7 @@ def GetKarriereAtJob(job,src):
     searchString_ = 'https://www.karriere.at/jobs?keywords='
         
     PrintToHtml('Attempt to read: ' + searchString_ + job)
+    src = 'www.karriere.at'
     
     a=1
     webData = GetWebPage(searchString_ + job + '&page=' + str(a))
@@ -191,23 +202,9 @@ def UpdateKarriereAt():
     '''
     
     PrintToHtml("Start UpdateKarriereAt")
-      
-    GetKarriereAtJob('data+science','www.karriere.at')
-    GetKarriereAtJob('data+scientist','www.karriere.at')
-    GetKarriereAtJob('big+data','www.karriere.at')
-    GetKarriereAtJob('hadoop','www.karriere.at')
-    GetKarriereAtJob('machine+learning','www.karriere.at')
-    GetKarriereAtJob('artificial+intelligence','www.karriere.at')
-    GetKarriereAtJob('predictive+analytics','www.karriere.at')
-    GetKarriereAtJob('scala','www.karriere.at')
-    GetKarriereAtJob('hive','www.karriere.at')
-    GetKarriereAtJob('tensorflow','www.karriere.at')
-    GetKarriereAtJob('watson','www.karriere.at')
-    GetKarriereAtJob('azure+ml','www.karriere.at')
-    GetKarriereAtJob('spark','www.karriere.at')
-    GetKarriereAtJob('data+mining','www.karriere.at')
-    GetKarriereAtJob('decision+tree','www.karriere.at')
-    GetKarriereAtJob('deep+learning','www.karriere.at')
+
+    for keyword in keywords:
+        GetKarriereAtJob(keyword)
     
     PrintToHtml("End UpdateKarriereAt")
     
