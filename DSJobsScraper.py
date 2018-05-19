@@ -215,6 +215,7 @@ def main():
     update the database
     '''
     warnings.simplefilter("ignore", DeprecationWarning)
+    load_keywords()
     
     with open('debug.html','w') as myfile:
         myfile.write("""<html>
