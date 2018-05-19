@@ -18,7 +18,6 @@ import csv
 def JobDetailClean2(text_):
     soup=BeautifulSoup(text_).get_text()
     text_ = soup
-    #text_ = text_.replace('\\/','/')
 
     with open('data/replacements/clean_karriere_at.csv', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
