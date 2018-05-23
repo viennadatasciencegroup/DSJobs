@@ -13,83 +13,26 @@ from bs4 import BeautifulSoup
 
 from textblob import TextBlob
 import re
+import csv
 
 def JobDetailClean2(text_):
     soup=BeautifulSoup(text_).get_text()
     text_ = soup
-    #text_ = text_.replace('\\/','/')
-    
-    text_ = text_.replace('"@context":"http:\\/\\/schema.org","@type":"JobPosting","title":','')
-    text_ = text_.replace('"description":','')
-    text_ = text_.replace('"datePosted":','')
-    text_ = text_.replace('"employmentType":','')
-    text_ = text_.replace('"jobLocation":','')
-    text_ = text_.replace('"@type":"Place","address":{"@type":"PostalAddress","addressLocality":','')
-    text_ = text_.replace('"addressRegion":','')
-    text_ = text_.replace('"addressCountry":','')
-    text_ = text_.replace('"identifier":{"@type":"PropertyValue","name":"karriere.at","value":','')
-    text_ = text_.replace('"industry":','')
-    text_ = text_.replace('"hiringOrganization":{"@type":"Organization","name":','')
-    text_ = text_.replace('"logo":','')
-    text_ = text_.replace('"address":{"@type":"PostalAddress","addressLocality":','')
-    text_ = text_.replace('"postalCode":','')
-    text_ = text_.replace('"streetAddress":','')
-    text_ = text_.replace('"jobBenefits":','')
-    text_ = text_.replace('"companymid.gif":','')
-    
-    text_ = text_.replace('<\\/strong>','')
-    text_ = text_.replace('<\\/p>','.')
-    text_ = text_.replace('<\\/li>','.')
-    text_ = text_.replace('<\\/ul>','.')
-    text_ = text_.replace('<\\/h1>','.')
-    text_ = text_.replace('<\\/h2>','.')
-    text_ = text_.replace('<\\/h3>','.')
-    text_ = text_.replace('<\\/h4>','.')
-    text_ = text_.replace('<\\/h5>','.')
-    text_ = text_.replace('\\n','.')
-    text_ = text_.replace('\\/','/')
-    
-    text_ = text_.replace('bzw.','bzw')
-    text_ = text_.replace('Mag.','Mag')
-    text_ = text_.replace('Nr.','Nr')
-    text_ = text_.replace('z.B.','zB')
-    text_ = text_.replace('z.H.','zH')
-    
-    text_ = text_.replace('xc3xa4','ä')
-    text_ = text_.replace('xc3x84','Ä')
-    text_ = text_.replace('xc3xbc','ü')
-    text_ = text_.replace('xc3x9c','Ü')
-    text_ = text_.replace('xc3xb6','ö')
-    text_ = text_.replace('xc3x96','Ö')
-    text_ = text_.replace('xc3x9f','ß')
-    
-    text_ = text_.replace('-','')
-    text_ = text_.replace('_','')
-    text_ = text_.replace('+','')
-    text_ = text_.replace('&','')
-    text_ = text_.replace('|','')
-    text_ = text_.replace('"','')
-    text_ = text_.replace('{','')
-    text_ = text_.replace('}','')
-    text_ = text_.replace('[','')
-    text_ = text_.replace(']','')
-    text_ = text_.replace('http:','')
-    text_ = text_.replace('https:','')
-        
-    text_ = text_.replace('/','')
-    text_ = text_.replace('www.','')
 
-    text_ = re.sub( '\.+', '. ', text_ ).strip()
-    text_ = text_.replace(' . ','. ')
-    text_ = text_.replace(',',', ')
-    text_ = text_.replace(':',': ')
-    text_ = re.sub( '\s+', ' ', text_ ).strip()
-    text_ = text_.replace(' . ','')
+    with open('data/replacements/clean_karriere_at.csv', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['Ignore']:
+                continue
+            if row['Regex']:
+                text_ = re.sub(row['From'], row['To'], text_).strip()
+            else:
+                text_ = text_.replace(row['From'], row['To'])
     
     text_ = TextBlob(text_)
         
     if len(text_) > 3:
-        if (text_.detect_language() == 'de'):
+        if text_.detect_language() == 'de':
             text_ = text_.translate(to="en")
         
     return(str(text_))

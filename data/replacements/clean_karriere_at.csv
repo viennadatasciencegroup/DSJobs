@@ -1,0 +1,61 @@
+From,To,Regex,Ignore\\/,/,False,True
+"""@context"":""http:\\/\\/schema.org"",""@type"":""JobPosting"",""title"":",,False,False
+"""description"":",,False,False
+"""datePosted"":",,False,False
+"""employmentType"":",,False,False
+"""jobLocation"":",,False,False
+"""@type"":""Place"",""address"":{""@type"":""PostalAddress"",""addressLocality"":",,False,False
+"""addressRegion"":",,False,False
+"""addressCountry"":",,False,False
+"""identifier"":{""@type"":""PropertyValue"",""name"":""karriere.at"",""value"":",,False,False
+"""industry"":",,False,False
+"""hiringOrganization"":{""@type"":""Organization"",""name"":",,False,False
+"""logo"":",,False,False
+"""address"":{""@type"":""PostalAddress"",""addressLocality"":",,False,False
+"""postalCode"":",,False,False
+"""streetAddress"":",,False,False
+"""jobBenefits"":",,False,False
+"""companymid.gif"":",,False,False
+<\\/strong>,,False,False
+<\\/p>,.,False,False
+<\\/li>,.,False,False
+<\\/ul>,.,False,False
+<\\/h1>,.,False,False
+<\\/h2>,.,False,False
+<\\/h3>,.,False,False
+<\\/h4>,.,False,False
+<\\/h5>,.,False,False
+\\n,.,False,False
+\\/,/,False,False
+bzw.,bzw,False,False
+Mag.,Mag,False,False
+Nr.,Nr,False,False
+z.B.,zB,False,False
+z.H.,zH,False,False
+xc3xa4,ä,False,False
+xc3x84,Ä,False,False
+xc3xbc,ü,False,False
+xc3x9c,Ü,False,False
+xc3xb6,ö,False,False
+xc3x96,Ö,False,False
+xc3x9f,ß,False,False
+-,,False,False
+_,,False,False
++,,False,False
+&,,False,False
+|,,False,False
+"""",,False,False
+{,,False,False
+},,False,False
+[,,False,False
+],,False,False
+http:,,False,False
+https:,,False,False
+/,,False,False
+www.,,False,False
+\.+,. ,True,False
+ . ,. ,False,False
+,",', ",False,False
+:,: ,False,False
+\s+, ,True,False
+ . ,,False,False
